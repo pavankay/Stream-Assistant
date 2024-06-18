@@ -2,11 +2,11 @@
 
 ## Overview
 
-This project is a console-based application that interacts with OpenAI's GPT-4 model to provide real-time responses using streaming functionality. The application features a user-friendly console interface with a placeholder prompt, live streaming of assistant responses, and a spinner animation during initialization.
+This project is a console-based application that interacts with OpenAI's Assistant API to provide real-time responses using streaming functionality. The application features  streaming of assistant responses and the cabilty of Function Calling
 
-## Features
 
 - **Streaming**: This code utlizies openai's streaming function cabilties along with its Assistant api.
+- **Function Calling**: In adition to the Streaming you can also implement your own functions in this code.
 
 ## Requirements
 
