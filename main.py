@@ -13,55 +13,14 @@ console = Console()
 console.print("Welcome", style="bold green")
 time.sleep(1)
 console.print("Client Initialized", style="bold green")
-time.sleep(1)
 
 
 # Display spinner animation on first boot
-with console.status("[bold blue]Booting...[/bold blue]", spinner="dots12"):
+with console.status("[bold blue]Booting...[/bold blue]", spinner="dots"):
     assistant = client.beta.assistants.create(
-        instructions="You are a weather bot. Use the provided functions to answer questions.",
+        instructions="You are an assistant. Use the provided functions to answer questions.",
         model="gpt-4o",
-        tools=[
-            {
-                "type": "function",
-                "function": {
-                    "name": "get_current_temperature",
-                    "description": "Get the current temperature for a specific location",
-                    "parameters": {
-                        "type": "object",
-                        "properties": {
-                            "location": {
-                                "type": "string",
-                                "description": "The city and state, e.g., San Francisco, CA"
-                            },
-                            "unit": {
-                                "type": "string",
-                                "enum": ["Celsius", "Fahrenheit"],
-                                "description": "The temperature unit to use. Infer this from the user's location."
-                            }
-                        },
-                        "required": ["location", "unit"]
-                    }
-                }
-            },
-            {
-                "type": "function",
-                "function": {
-                    "name": "get_rain_probability",
-                    "description": "Get the probability of rain for a specific location",
-                    "parameters": {
-                        "type": "object",
-                        "properties": {
-                            "location": {
-                                "type": "string",
-                                "description": "The city and state, e.g., San Francisco, CA"
-                            }
-                        },
-                        "required": ["location"]
-                    }
-                }
-            }
-        ]
+        tools=[]
     )
     time.sleep(4)
 console.print("Boot successful", style="bold green")
@@ -103,7 +62,6 @@ class EventHandler(AssistantEventHandler):
         ) as stream:
             stream.until_done()  # DO NOT CHANGE THIS
 
-
 def message_assistant(thread_id, message):
     # make sure this prints on same line as the helper function
     client.beta.threads.messages.create(
@@ -119,7 +77,6 @@ def message_assistant(thread_id, message):
         stream.until_done()
 
 thread = client.beta.threads.create()
-# console.print("Thread created for session", style="bold blue")
 
 def show_help():
     console.print("Available commands:", style="bold yellow")
@@ -128,30 +85,40 @@ def show_help():
     console.print("/help - Show this help message", style="bold cyan")
 
 def custom_input(prompt, placeholder):
-    console.print(prompt, end="", style="bold blue")
-    console.print(placeholder, end="", style="dim")
     input_text = ""
-    placeholder_displayed = True
+    placeholder_visible = True
+
+    # Print the prompt only once
+    console.print(prompt, end="", style="bold blue")
+
+    # Print the initial placeholder
+    console.print(placeholder, end="", style="dim")
+
     while True:
-        ch = msvcrt.getch()
-        if ch in (b'\r', b'\n'):
-            break
-        if ch == b'\x08':  # Backspace
-            if len(input_text) > 0:
-                input_text = input_text[:-1]
-                sys.stdout.write('\b \b')
-        elif ch == b'\x03':  # Ctrl+C
-            console.print("\nGoodbye!", style="bold green")
-            sys.exit(0)
-        else:
-            if placeholder_displayed:
-                sys.stdout.write('\b' * len(placeholder) + ' ' * len(placeholder) + '\b' * len(placeholder))
-                placeholder_displayed = False
-            try:
-                input_text += ch.decode()
-                sys.stdout.write(ch.decode())
-            except UnicodeDecodeError:
-                continue
+        if msvcrt.kbhit():
+            ch = msvcrt.getch()
+            if ch in (b'\r', b'\n'):
+                break
+            elif ch == b'\x08':  # Backspace
+                if input_text:
+                    input_text = input_text[:-1]
+                    sys.stdout.write('\b \b')  # Erase the character
+            elif ch == b'\x03':  # Ctrl+C
+                console.print("\nGoodbye!", style="bold green")
+                sys.exit(0)
+            else:
+                try:
+                    char = ch.decode()
+                    if placeholder_visible:
+                        # Clear the placeholder
+                        sys.stdout.write('\b' * len(placeholder) + ' ' * len(placeholder) + '\b' * len(placeholder))
+                        placeholder_visible = False
+                    input_text += char
+                    sys.stdout.write(char)
+                except UnicodeDecodeError:
+                    continue
+            sys.stdout.flush()
+
     print()  # Move to the next line after input
     return input_text
 
